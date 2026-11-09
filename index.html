@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comprehensive Financial Command Center</title>
+    <title>Financial Command Center & Credit Simulator</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -35,7 +35,6 @@
         h1 { margin: 0 0 5px 0; font-size: 1.8rem; color: #60a5fa; }
         p.subtitle { color: var(--text-secondary); margin: 0; font-size: 0.95rem; }
 
-        /* Metric Cards Grid */
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -91,7 +90,7 @@
             text-transform: uppercase;
         }
         .badge-pending { background-color: rgba(245, 158, 11, 0.2); color: var(--warning); }
-        .badge-active { background-color: rgba(59, 130, 246, 0.2); color: var(--accent); }
+        .badge-active { background-color: rgba(59, 130, 246, 0.2); color: accent; }
         .badge-success { background-color: rgba(16, 185, 129, 0.2); color: var(--success); }
 
         .btn {
@@ -107,7 +106,7 @@
         }
         .btn:hover { background-color: var(--accent-hover); }
         
-        input[type="text"], input[type="number"], textarea {
+        input[type="text"], input[type="number"], select, textarea {
             width: 100%;
             background-color: #0f172a;
             border: 1px solid var(--border);
@@ -117,19 +116,28 @@
             font-family: inherit;
             box-sizing: border-box;
             font-size: 0.9rem;
+            margin-top: 5px;
         }
         textarea { height: 80px; resize: vertical; }
-
-        .form-row {
+        .simulator-grid {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr auto;
-            gap: 10px;
-            margin-top: 15px;
-            align-items: center;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
         }
         @media (max-width: 600px) {
-            .form-row { grid-template-columns: 1fr; }
+            .simulator-grid { grid-template-columns: 1fr; }
         }
+        .sim-output {
+            background-color: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .sim-output .score-delta { font-size: 1.8rem; font-weight: bold; color: var(--success); margin: 5px 0; }
     </style>
 </head>
 <body>
@@ -152,11 +160,38 @@
         </div>
         <div class="metric-card">
             <h3>Est. Credit Range</h3>
-            <div class="value">580 - 620</div>
+            <div class="value" id="estCreditRange">580 - 620</div>
         </div>
     </div>
 
-    <!-- Debt & Accounts Manager -->
+    <!-- Credit Score Simulator -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Credit Score "What-If" Simulator</h2>
+        </div>
+        <div class="simulator-grid">
+            <div>
+                <label style="font-size: 0.85rem; color: var(--text-secondary);">Select Planned Financial Action:</label>
+                <select id="simAction" onchange="runSimulation()">
+                    <option value="none">Choose an action...</option>
+                    <option value="pay_collection">Pay & Delete Jefferson Capital Collection ($495)</option>
+                    <option value="pay_c1_savor">Pay off Capital One Savor ($495.53)</option>
+                    <option value="pay_c1_plat">Settle/Pay off Capital One Platinum ($1,720)</option>
+                    <option value="pay_all_problem">Clear All Problem Debts ($2,710 total)</option>
+                </select>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 10px;">
+                    Estimates point impact based on FICO category weightings (Payment History & Credit Utilization).
+                </p>
+            </div>
+            <div class="sim-output">
+                <span style="font-size: 0.85rem; color: var(--text-secondary);">Estimated Score Change</span>
+                <div class="score-delta" id="simDelta">+0 pts</div>
+                <div style="font-size: 0.85rem;" id="simDescription">Select an action to simulate credit impact.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debts & Obligations -->
     <div class="card">
         <div class="card-header">
             <h2>Debts & Obligations</h2>
@@ -170,7 +205,7 @@
                     <th>Action / Notes</th>
                 </tr>
             </thead>
-            <tbody id="debtTableBody">
+            <tbody>
                 <tr>
                     <td><strong>Jefferson Capital</strong> (T-Mobile)</td>
                     <td>$495.00</td>
@@ -205,52 +240,13 @@
         </table>
     </div>
 
-    <!-- Monthly Cash Flow & Bills Tracker -->
-    <div class="card">
-        <div class="card-header">
-            <h2>Monthly Cash Flow & Bills</h2>
-            <button class="btn" onclick="addBillRow()">+ Add Bill</button>
-        </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Bill / Expense Name</th>
-                    <th>Monthly Amount</th>
-                    <th>Due Date / Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="billsTableBody">
-                <tr>
-                    <td>US Bank Mortgage</td>
-                    <td>$3,272.00</td>
-                    <td>Forbearance (Dec Resume)</td>
-                    <td><button class="btn" style="background:#ef4444; padding:2px 6px;" onclick="this.closest('tr').remove(); updateTotals();">Remove</button></td>
-                </tr>
-                <tr>
-                    <td>Ally Auto Loan</td>
-                    <td>$336.92</td>
-                    <td>Paid to Nov 21</td>
-                    <td><button class="btn" style="background:#ef4444; padding:2px 6px;" onclick="this.closest('tr').remove(); updateTotals();">Remove</button></td>
-                </tr>
-            </tbody>
-        </table>
-        
-        <div class="form-row">
-            <input type="text" id="newBillName" placeholder="Bill Name (e.g., Utilities, Phone)">
-            <input type="number" id="newBillAmount" placeholder="Amount ($)">
-            <input type="text" id="newBillStatus" placeholder="Status / Due Date">
-            <button class="btn" onclick="saveNewBill()">Add Item</button>
-        </div>
-    </div>
-
     <!-- Journal & Action Log -->
     <div class="card">
         <div class="card-header">
             <h2>Action Log & Call Notes</h2>
             <button class="btn" onclick="saveNotes()">Save Notes</button>
         </div>
-        <textarea id="userNotes" placeholder="Log details about your upcoming call with Jefferson Capital or weekly check-ins..."></textarea>
+        <textarea id="userNotes" placeholder="Log details about your call with Jefferson Capital or weekly updates..."></textarea>
     </div>
 </div>
 
@@ -258,12 +254,6 @@
     window.addEventListener('DOMContentLoaded', () => {
         const savedNotes = localStorage.getItem('financialTrackerNotes');
         if (savedNotes) document.getElementById('userNotes').value = savedNotes;
-
-        const savedBills = localStorage.getItem('financialTrackerBills');
-        if (savedBills) {
-            document.getElementById('billsTableBody').innerHTML = savedBills;
-        }
-        updateTotals();
     });
 
     function saveNotes() {
@@ -272,49 +262,32 @@
         alert('Notes saved securely to your device!');
     }
 
-    function saveNewBill() {
-        const name = document.getElementById('newBillName').value;
-        const amount = parseFloat(document.getElementById('newBillAmount').value);
-        const status = document.getElementById('newBillStatus').value;
+    function runSimulation() {
+        const action = document.getElementById('simAction').value;
+        const deltaElem = document.getElementById('simDelta');
+        const descElem = document.getElementById('simDescription');
 
-        if (!name || isNaN(amount)) {
-            alert('Please enter a valid bill name and amount.');
-            return;
+        if (action === 'none') {
+            deltaElem.innerText = '+0 pts';
+            deltaElem.style.color = 'var(--text-primary)';
+            descElem.innerText = 'Select an action to simulate credit impact.';
+        } else if (action === 'pay_collection') {
+            deltaElem.innerText = '+25 to +40 pts';
+            deltaElem.style.color = 'var(--success)';
+            descElem.innerText = 'Removes active collection weight and updates payment history once marked paid/deleted.';
+        } else if (action === 'pay_c1_savor') {
+            deltaElem.innerText = '+15 to +25 pts';
+            deltaElem.style.color = 'var(--success)';
+            descElem.innerText = 'Reduces revolving utilization on the Savor card, improving the amounts-owed category.';
+        } else if (action === 'pay_c1_plat') {
+            deltaElem.innerText = '+30 to +50 pts';
+            deltaElem.style.color = 'var(--success)';
+            descElem.innerText = 'Substantially lowers overall credit utilization across restricted revolving lines.';
+        } else if (action === 'pay_all_problem') {
+            deltaElem.innerText = '+75 to +110 pts';
+            deltaElem.style.color = 'var(--success)';
+            descElem.innerText = 'Maximum projected recovery by clearing all collections and resolving revolving restrictions.';
         }
-
-        const tbody = document.getElementById('billsTableBody');
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${name}</td>
-            <td>$${amount.toFixed(2)}</td>
-            <td>${status || 'Active'}</td>
-            <td><button class="btn" style="background:#ef4444; padding:2px 6px;" onclick="this.closest('tr').remove(); updateTotals();">Remove</button></td>
-        `;
-        tbody.appendChild(row);
-
-        document.getElementById('newBillName').value = '';
-        document.getElementById('newBillAmount').value = '';
-        document.getElementById('newBillStatus').value = '';
-
-        persistBills();
-        updateTotals();
-    }
-
-    function persistBills() {
-        localStorage.setItem('financialTrackerBills', document.getElementById('billsTableBody').innerHTML);
-    }
-
-    function updateTotals() {
-        persistBills();
-        // Recalculate monthly outflow if desired
-        let total = 0;
-        const rows = document.querySelectorAll('#billsTableBody tr');
-        rows.forEach(row => {
-            const amountText = row.cells[1]?.innerText.replace('$', '');
-            const val = parseFloat(amountText);
-            if (!isNaN(val)) total += val;
-        });
-        document.getElementById('totalMonthlyOutflow').innerText = '$' + total.toFixed(2);
     }
 </script>
 
