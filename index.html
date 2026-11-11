@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Command Center & Credit Simulator</title>
+    <title>Financial Command Center & Editable Tracker</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -82,6 +82,16 @@
         }
         th { color: var(--text-secondary); font-weight: 600; }
         
+        .editable-input {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            width: 90%;
+        }
+
         .badge {
             padding: 4px 8px;
             border-radius: 6px;
@@ -90,7 +100,7 @@
             text-transform: uppercase;
         }
         .badge-pending { background-color: rgba(245, 158, 11, 0.2); color: var(--warning); }
-        .badge-active { background-color: rgba(59, 130, 246, 0.2); color: accent; }
+        .badge-active { background-color: rgba(59, 130, 246, 0.2); color: var(--accent); }
         .badge-success { background-color: rgba(16, 185, 129, 0.2); color: var(--success); }
 
         .btn {
@@ -160,7 +170,7 @@
         </div>
         <div class="metric-card">
             <h3>Est. Credit Range</h3>
-            <div class="value" id="estCreditRange">580 - 620</div>
+            <div class="value">580 - 620</div>
         </div>
     </div>
 
@@ -180,71 +190,111 @@
                     <option value="pay_all_problem">Clear All Problem Debts ($2,710 total)</option>
                 </select>
                 <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 10px;">
-                    Estimates point impact based on FICO category weightings (Payment History & Credit Utilization).
+                    Estimates point impact based on FICO category weightings.
                 </p>
             </div>
             <div class="sim-output">
                 <span style="font-size: 0.85rem; color: var(--text-secondary);">Estimated Score Change</span>
                 <div class="score-delta" id="simDelta">+0 pts</div>
-                <div style="font-size: 0.85rem;" id="simDescription">Select an action to simulate credit impact.</div>
+                <div style="font-size: 0.8rem;" id="simDescription">Select an action to simulate credit impact.</div>
             </div>
         </div>
     </div>
 
-    <!-- Debts & Obligations -->
+    <!-- Debts & Obligations (Fully Editable) -->
     <div class="card">
         <div class="card-header">
             <h2>Debts & Obligations</h2>
+            <button class="btn" onclick="saveAllData()">Save Changes</button>
         </div>
         <table>
             <thead>
                 <tr>
                     <th>Account</th>
-                    <th>Balance</th>
+                    <th>Balance ($)</th>
                     <th>Status</th>
                     <th>Action / Notes</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="editableDebtBody">
                 <tr>
                     <td><strong>Jefferson Capital</strong> (T-Mobile)</td>
-                    <td>$495.00</td>
+                    <td><input type="text" class="editable-input debt-val" value="495.00" oninput="calculateTotals()"></td>
                     <td><span class="badge badge-pending">Collection</span></td>
-                    <td>Negotiate Pay-for-Delete ($200–$250) tomorrow</td>
+                    <td><input type="text" class="editable-input" value="Negotiate Pay-for-Delete ($200–$250) tomorrow"></td>
                 </tr>
                 <tr>
                     <td><strong>Capital One Savor</strong></td>
-                    <td>$495.53</td>
+                    <td><input type="text" class="editable-input debt-val" value="495.53" oninput="calculateTotals()"></td>
                     <td><span class="badge badge-active">Restricted</span></td>
-                    <td>Pay down post-collection</td>
+                    <td><input type="text" class="editable-input" value="Pay down post-collection"></td>
                 </tr>
                 <tr>
                     <td><strong>Capital One Platinum</strong></td>
-                    <td>$1,720.22</td>
+                    <td><input type="text" class="editable-input debt-val" value="1720.22" oninput="calculateTotals()"></td>
                     <td><span class="badge badge-active">Restricted</span></td>
-                    <td>Settlement / Payoff plan</td>
+                    <td><input type="text" class="editable-input" value="Settlement / Payoff plan"></td>
                 </tr>
                 <tr>
                     <td><strong>Ally Auto Loan</strong></td>
-                    <td>$11,300.82</td>
+                    <td><input type="text" class="editable-input" value="11,300.82"></td>
                     <td><span class="badge badge-success">Current</span></td>
-                    <td>Paid ahead to Nov 21 ($336.92/mo)</td>
+                    <td><input type="text" class="editable-input" value="Paid ahead to Nov 21 ($336.92/mo)"></td>
                 </tr>
                 <tr>
                     <td><strong>US Bank Mortgage</strong></td>
-                    <td>$357,667.00</td>
+                    <td><input type="text" class="editable-input" value="357,667.00"></td>
                     <td><span class="badge badge-success">Forbearance</span></td>
-                    <td>Active through Nov 2026 ($3,272/mo)</td>
+                    <td><input type="text" class="editable-input" value="Active through Nov 2026 ($3,272/mo)"></td>
                 </tr>
             </tbody>
         </table>
+    </div>
+
+    <!-- Monthly Cash Flow & Bills -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Monthly Cash Flow & Bills</h2>
+            <button class="btn" onclick="addBillRow()">+ Add Bill</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Bill / Expense Name</th>
+                    <th>Monthly Amount ($)</th>
+                    <th>Due Date / Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="billsTableBody">
+                <tr>
+                    <td><input type="text" class="editable-input" value="US Bank Mortgage"></td>
+                    <td><input type="text" class="editable-input bill-val" value="3272.00" oninput="calculateTotals()"></td>
+                    <td><input type="text" class="editable-input" value="Forbearance (Dec Resume)"></td>
+                    <td><button class="btn" style="background:#ef4444; padding:2px 6px;" onclick="this.closest('tr').remove(); calculateTotals();">Remove</button></td>
+                </tr>
+                <tr>
+                    <td><input type="text" class="editable-input" value="Ally Auto Loan"></td>
+                    <td><input type="text" class="editable-input bill-val" value="336.92" oninput="calculateTotals()"></td>
+                    <td><input type="text" class="editable-input" value="Paid to Nov 21"></td>
+                    <td><button class="btn" style="background:#ef4444; padding:2px 6px;" onclick="this.closest('tr').remove(); calculateTotals();">Remove</button></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="form-row" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; margin-top: 15px; align-items: center;">
+            <input type="text" id="newBillName" placeholder="Bill Name">
+            <input type="number" id="newBillAmount" placeholder="Amount ($)">
+            <input type="text" id="newBillStatus" placeholder="Status">
+            <button class="btn" onclick="saveNewBill()">Add Item</button>
+        </div>
     </div>
 
     <!-- Journal & Action Log -->
     <div class="card">
         <div class="card-header">
             <h2>Action Log & Call Notes</h2>
-            <button class="btn" onclick="saveNotes()">Save Notes</button>
+            <button class="btn" onclick="saveAllData()">Save Notes</button>
         </div>
         <textarea id="userNotes" placeholder="Log details about your call with Jefferson Capital or weekly updates..."></textarea>
     </div>
@@ -252,14 +302,74 @@
 
 <script>
     window.addEventListener('DOMContentLoaded', () => {
-        const savedNotes = localStorage.getItem('financialTrackerNotes');
+        const savedDebts = localStorage.getItem('editableDebtBody');
+        if (savedDebts) document.getElementById('editableDebtBody').innerHTML = savedDebts;
+
+        const savedBills = localStorage.getItem('billsTableBody');
+        if (savedBills) document.getElementById('billsTableBody').innerHTML = savedBills;
+
+        const savedNotes = localStorage.getItem('userNotes');
         if (savedNotes) document.getElementById('userNotes').value = savedNotes;
+
+        calculateTotals();
     });
 
-    function saveNotes() {
-        const notes = document.getElementById('userNotes').value;
-        localStorage.setItem('financialTrackerNotes', notes);
-        alert('Notes saved securely to your device!');
+    function saveAllData() {
+        localStorage.setItem('editableDebtBody', document.getElementById('editableDebtBody').innerHTML);
+        localStorage.setItem('billsTableBody', document.getElementById('billsTableBody').innerHTML);
+        localStorage.setItem('userNotes', document.getElementById('userNotes').value);
+        alert('All updates saved securely to your device!');
+    }
+
+    function calculateTotals() {
+        // Calculate problem debts (first 3 rows)
+        let problemTotal = 0;
+        const debtInputs = document.querySelectorAll('.debt-val');
+        debtInputs.forEach(input => {
+            const val = parseFloat(input.value.replace(/[^0-9.-]+/g,""));
+            if (!isNaN(val)) problemTotal += val;
+        });
+        document.getElementById('totalProblemDebt').innerText = '$' + problemTotal.toFixed(2);
+
+        // Calculate monthly outflow
+        let monthlyTotal = 0;
+        const billInputs = document.querySelectorAll('.bill-val');
+        billInputs.forEach(input => {
+            const val = parseFloat(input.value.replace(/[^0-9.-]+/g,""));
+            if (!isNaN(val)) monthlyTotal += val;
+        });
+        document.getElementById('totalMonthlyOutflow').innerText = '$' + monthlyTotal.toFixed(2);
+
+        // Auto-save state
+        localStorage.setItem('editableDebtBody', document.getElementById('editableDebtBody').innerHTML);
+        localStorage.setItem('billsTableBody', document.getElementById('billsTableBody').innerHTML);
+    }
+
+    function saveNewBill() {
+        const name = document.getElementById('newBillName').value;
+        const amount = parseFloat(document.getElementById('newBillAmount').value);
+        const status = document.getElementById('newBillStatus').value;
+
+        if (!name || isNaN(amount)) {
+            alert('Please enter a valid bill name and amount.');
+            return;
+        }
+
+        const tbody = document.getElementById('billsTableBody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="text" class="editable-input" value="${name}"></td>
+            <td><input type="text" class="editable-input bill-val" value="${amount.toFixed(2)}" oninput="calculateTotals()"></td>
+            <td><input type="text" class="editable-input" value="${status || 'Active'}"></td>
+            <td><button class="btn" style="background:#ef4444; padding:2px 6px;" onclick="this.closest('tr').remove(); calculateTotals();">Remove</button></td>
+        `;
+        tbody.appendChild(row);
+
+        document.getElementById('newBillName').value = '';
+        document.getElementById('newBillAmount').value = '';
+        document.getElementById('newBillStatus').value = '';
+
+        calculateTotals();
     }
 
     function runSimulation() {
@@ -274,19 +384,19 @@
         } else if (action === 'pay_collection') {
             deltaElem.innerText = '+25 to +40 pts';
             deltaElem.style.color = 'var(--success)';
-            descElem.innerText = 'Removes active collection weight and updates payment history once marked paid/deleted.';
+            descElem.innerText = 'Removes active collection weight once marked paid/deleted.';
         } else if (action === 'pay_c1_savor') {
             deltaElem.innerText = '+15 to +25 pts';
             deltaElem.style.color = 'var(--success)';
-            descElem.innerText = 'Reduces revolving utilization on the Savor card, improving the amounts-owed category.';
+            descElem.innerText = 'Reduces revolving utilization on the Savor card.';
         } else if (action === 'pay_c1_plat') {
             deltaElem.innerText = '+30 to +50 pts';
             deltaElem.style.color = 'var(--success)';
-            descElem.innerText = 'Substantially lowers overall credit utilization across restricted revolving lines.';
+            descElem.innerText = 'Substantially lowers overall credit utilization across restricted lines.';
         } else if (action === 'pay_all_problem') {
             deltaElem.innerText = '+75 to +110 pts';
             deltaElem.style.color = 'var(--success)';
-            descElem.innerText = 'Maximum projected recovery by clearing all collections and resolving revolving restrictions.';
+            descElem.innerText = 'Maximum projected recovery by clearing all collections and restricted debt.';
         }
     }
 </script>
